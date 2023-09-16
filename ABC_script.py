@@ -9,7 +9,7 @@ for i in range(100):
 
 abc = ["A", "B", "C", "D", "E", "F"]
 line = ["import sys\n", "import io\n", "import math\n", "sys.setrecursionlimit(10**8)\n",
-         "_INPUT = \"\"\"\\\n", "\n", "\"\"\"\n","sys.stdin = io.StringIO(_INPUT)"]
+         "_INPUT = \"\"\"\\\n", "\n", "\"\"\"\n","sys.stdin = io.StringIO(_INPUT)\n", "readline=sys.stdin.readline"]
 
 os.makedirs(path)
 for alphabet in abc:
