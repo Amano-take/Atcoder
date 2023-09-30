@@ -1,6 +1,6 @@
 import os
 
-num = 321
+num = 322
 new_dir_path = './' + str(num)
 
 try:
