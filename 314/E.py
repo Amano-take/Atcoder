@@ -12,28 +12,23 @@ sys.stdin=io.StringIO(_INPUT)
 readline = sys.stdin.readline
 
 N, M = map(int, input().split())
-rou = []
 roulett = []
-
+dp = [10**8] * (M+1)
+dp[0] = 0
 
 for i in range(N):
     c, p, *num = map(int, readline().split())
-    roulett.append(num)
-    exp = sum(num) / p
-    costp = exp / c
-    rou.append((exp, costp, c, i))
+    cand = []
+    for n in num:
+        if n != 0:
+            cand.append(n)
+    roulett.append((c * len(num) / len(cand) , cand))
 
-rou.sort(key=lambda x: -x[1])
-ans = 0
-for _ in range(100):
-    rest = M
-    while rest > 0:
-        for exp, costp, c, i in rou:
-            if exp <= rest:
-                ans += c
-                rest -= random.choice(roulett[i])
-                break
-    
-print(ans / 100)
-            
 
+for i in range(1, M+1):
+    for c, deme in roulett:
+        total = 0
+        for d in deme:
+            total += dp[max(0, i-d)] / len(deme)
+        dp[i] = min(dp[i], total + c)
+print(dp[-1])
