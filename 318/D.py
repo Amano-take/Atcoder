@@ -5,34 +5,40 @@ from collections import defaultdict
 
 sys.setrecursionlimit(10**8)
 _INPUT = """\
-3
-1 2
-3
+2
+3 1 3
+1 2 1
 """
 sys.stdin = io.StringIO(_INPUT)
 readline = sys.stdin.readline
+
 N = int(input())
-edge = defaultdict(int)
-for i in range(N-1):
-    Dlist = list(map(int, readline().split()))
-    for e, d in enumerate(Dlist):
-        end = i+e+1
-        edge[(i, end)] = d
-        edge[(end, i)] = d
+sumZ = 0
+sumTakahashi = 0
+cost = []
+reward = []
+for _ in range(N):
+    X, Y, Z = map(int, readline().split())
+    sumZ += Z
+    if X < Y:
+        cost.append(( Y - X + 1) // 2)
+        reward.append(Z)
+    else:
+        sumTakahashi += Z
 
-pair = defaultdict(int)
-for i in range(N-1):
-    for j in range(i+1, N):
-        pair[(i, j)] = (1<<i) + (1 << j)
+totalreward = (sumZ + 1) // 2 - sumTakahashi
+if totalreward <= 0:
+    print("0")
+    exit()
 
 
-dp = [[0] * (1<<N) for _ in range(N//2 + 1)]
-pairitem = pair.items()
-for i in range(N//2):
-    for j in range(1<<N):
-        rest = (1<<N) - 1 - j
-        for pa, value in pairitem:
+dp = [[math.inf] * (totalreward + 1) for _ in range(len(cost) + 1)]
+dp[0][0] = 0
 
-            if value == (value & rest):
-                dp[i+1][j | value] = max(dp[i+1][j | value], dp[i][j] + edge[pa])
+for selection in range(len(cost)):
+    c = cost[selection]
+    r = reward[selection]
+    for rsel in range(totalreward + 1):
+        dp[selection+1][min(rsel + r, totalreward)] = min(dp[selection][rsel]+c, dp[selection+1][min(rsel+r, totalreward)])
+        dp[selection+1][rsel] = min(dp[selection+1][rsel], dp[selection][rsel])
 print(dp[-1][-1])
