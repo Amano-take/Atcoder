@@ -53,19 +53,17 @@ class segTree():
         return self.recquery(0, start, end)
 
     def recquery(self, index, start, end):
-        print(index, start, end)
-        if start == end:
+        if start >= end:
             return self.identity
         s, e = self.se[index]
-        #完全に一致する場合
-        if s == start and e == end:
+        #完全に包含される場合
+        if s >= start and e <= end:
             return self.binaryTree[index]
         #部分的に一致する場合
-        elif s <= start and e >= end:
-            mid = self.se[index*2+1][1]
-            return self.func(self.recquery(index*2+1, start, mid), self.recquery(index*2+2, mid, end))
+        elif start < e and end > s:
+            return self.func(self.recquery(index*2+1, start, end), self.recquery(index*2+2, start, end))
         #完全に一致しない場合
-        elif s > start or e < end:
+        else
             return self.identity
         
 
