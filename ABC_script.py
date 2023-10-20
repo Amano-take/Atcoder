@@ -1,5 +1,5 @@
 import os
-num = 318
+num = 309
 for i in range(100):
     n = num + i
     dir_path = './' + str(n)

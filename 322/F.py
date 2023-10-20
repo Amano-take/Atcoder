@@ -1,10 +1,5 @@
 import sys
-import io
-
-import math
-
-
-import math
+from collections import deque
 
 
 class lasySegTree():
@@ -14,21 +9,20 @@ class lasySegTree():
         モノイド（単位元の存在と(xy)z = x(yz)\n
         順同型作用モノイド(xy)@a = (x@a)(y@a)(順同型性), x@(a1a2) = (x@a1)@a2(作用素モノイド)
         """
-        self.L = 2 ** math.ceil(math.log2(len(setList)))
+        self.L = 1 << (len(setList) - 1).bit_length()
         self.funcvv = funcvv
         self.funcva = funcva
         self.funcaa = funcaa
         self.identityV = identityValue
         self.identityA = identityAction
-        self.lazy = [identityAction for _ in range(self.L * 2 - 1)]
-
-        while len(setList) != self.L:
-            setList.append(self.identityV)
-        self.binaryTree = [0] * (self.L - 1)
-        self.binaryTree.extend(setList)
+        self.lazy = [identityAction] * (self.L * 2 - 1)
+        self.binaryTree = [self.identityV] * (self.L * 2 - 1)
         self.se = [0] * (self.L - 1)
         self.se.extend([(i, i+1) for i in range(self.L)])
 
+        for i in range(len(setList)):
+            self.binaryTree[self.L - 1 + i] = setList[i]
+        
         for i in range(self.L - 2, -1, -1):
             self.binaryTree[i] = self.funcvv(self.binaryTree[2*i + 1], self.binaryTree[2*i + 2])
             self.se[i] = (self.se[2*i + 1][0] , self.se[2*i+2][1])
@@ -54,7 +48,7 @@ class lasySegTree():
         """
         index = self.L - 1 + index
         self.binaryTree[index] = value
-        while True:
+        while True: 
             index = (index - 1 ) // 2
             self.binaryTree[index] = self.func(self.binaryTree[2*index + 1], self.binaryTree[2*index + 2])
             if index == 0:
@@ -75,13 +69,40 @@ class lasySegTree():
             return
         #部分的に一致する場合
         elif start < e and end > s:
-            mid = self.se[index*2+1][1]
             self.rec_section_set(index*2+1, start, end, action)
             self.rec_section_set(index*2+2, start, end, action)
             self.binaryTree[index] = self.funcvv(self.binaryTree[index*2+1], self.binaryTree[index*2+2])
         #完全に一致しない場合
         else:
             return
+        
+    def stack_section_set(self, start, end, action):
+        stack = deque()
+        stack.append(0)
+        while len(stack) != 0:
+            index = stack.pop()
+            if index < 0:
+                index = - index - 1
+                self.binaryTree[index] = self.funcvv(self.binaryTree[index*2+1], self.binaryTree[index*2+2])
+                continue
+
+            self.prop(index)
+            if start >= end:
+                continue
+            s, e = self.se[index]
+            #完全に包含される場合
+            if s >= start and e <= end:
+                self.lazy[index] = action
+                self.prop(index)
+                continue
+            #部分的に一致する場合
+            elif start < e and end > s:
+                stack.append(-index-1)
+                stack.append(index*2 + 2)
+                stack.append(index*2 + 1)
+            #完全に一致しない場合
+            else:
+                continue
 
     def prop(self, index):
         if not self.lazy[index] == self.identityA:
@@ -100,8 +121,6 @@ class lasySegTree():
 
     def recquery(self, index, start, end):
         self.prop(index)
-        if start == end:
-            return self.identityV
         s, e = self.se[index]
         #完全に一致する場合
         if s >= start and e <= end:
@@ -113,72 +132,77 @@ class lasySegTree():
         else:
             return self.identityV
         
-sys.setrecursionlimit(10**8)
-_INPUT = """\
-7 6
-1101110
-2 1 7
-2 2 4
-1 3 6
-2 1 7
-1 4 7
-2 1 7
-"""
-sys.stdin = io.StringIO(_INPUT)
+    
+    def stack_query(self, start, end):
+        stack = deque([0])
+        ans = self.identityV
+        while len(stack) != 0:
+            index = stack.pop()
+            self.prop(index)
+            s, e = self.se[index]
+            #完全に一致する場合
+            if s >= start and e <= end:
+                ans = self.funcvv(ans, self.binaryTree[index])
+            #部分的に一致する場合
+            elif start < e and end > s:
+                stack.append(index*2 + 2)
+                stack.append(index*2 + 1)
+            #完全に一致しない場合
+            else:
+                continue
+        return ans
+        
+
 readline = sys.stdin.readline
-N, M = map(int, input().split())
+N, M = map(int, readline().split())
+mask = (1<<20) - 1
 
+def funcvv(x, y):
+    m1x = x[0] & mask
+    l1x = (x[0]>>20) & mask
+    r1x = x[0]>>40
+    m0x = x[1] & mask
+    l0x = (x[1]>>20) & mask
+    r0x = x[1]>>40
+    m1y = y[0] & mask
+    l1y = (y[0]>>20) & mask
+    r1y = y[0]>>40
+    m0y = y[1] & mask
+    l0y = (y[1]>>20) & mask
+    r0y = y[1]>>40
 
-def funcvv(s, t):
-    if s is None and t is None:
-        return None
-    elif s is None:
-        return t
-    elif t is None:
-        return s
-    else:
-        return "".join([s, t])
+    m1 = max(m1x,m1y,r1x+l1y)
+    l1 = l1x if m0x else m1x + l1y
+    r1 = r1y if m0y else r1x + m1y
+    m0 = max(m0x,m0y,r0x+l0y)
+    l0 = l0x if m1x else m0x + l0y
+    r0 = r0y if m1y else r0x + m0y
+
+    return ( m1 | (l1<<20) | (r1<<40)  , m0 | (l0<<20) | (r0<<40))
 
 def funcaa(a, b):
-    if a is None and b is None:
-        return None
-    elif a is None:
-        return b
-    elif b is None:
-        return a
-    else:
-        return None
+    return a^b
     
 def funcva(v, a):
-    if a is None:
-        return v
-    else:
-        ans = bin(2**len(v) - 1 - int(v, 2))[2:]
-        if len(ans) == len(v):
-            return ans
-        else:
-            t = "0" * (len(v) - len(ans))
-            return "".join([t, ans])
+    return (v[1],v[0]) if a else v
     
-def count(s):
-    a = list(map(int, list(s)))
-    max = 0
-    t = 0
-    for i in range(len(a)):
-        if a[i] == 1:
-            t+=1
-            if t > max:
-                max = t
-        else:
-            t = 0
-    return max
 
 S = list(input())
-lst = lasySegTree(S, funcvv, funcva, funcaa, identityValue="0")
+t = (1<<40) + (1<<20) + 1
+def initiate(v):
+    if v=="0":
+        return (0, t)
+    else:
+        return (t, 0)
+ini = list(map(initiate, S))
+lst = lasySegTree(ini, funcvv, funcva, funcaa, identityValue=(0,t), identityAction=0)
+ans = []
 for _ in range(M):
-    x, s, e = map(int, input().split())
+    x, s, e = map(int, readline().split())
     s -= 1
     if x == 1:
-        lst.section_set(s, e, 1)
+        lst.stack_section_set(s, e, 1)
     else:
-        print(count(lst.query(s, e)))
+        ans.append(lst.stack_query(s, e)[0] & mask)
+
+sys.stdout.write("\n".join(map(str, ans)))

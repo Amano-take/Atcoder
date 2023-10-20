@@ -1,4 +1,4 @@
-import math
+from collections import deque
 
 
 class lasySegTree():
@@ -8,23 +8,22 @@ class lasySegTree():
         モノイド（単位元の存在と(xy)z = x(yz)\n
         順同型作用モノイド(xy)@a = (x@a)(y@a)(順同型性), x@(a1a2) = (x@a1)@a2(作用素モノイド)
         """
-        self.L = 2 ** math.ceil(math.log2(len(setList)))
+        self.L = 1 << (len(setList) - 1).bit_length()
         self.funcvv = funcvv
         self.funcva = funcva
         self.funcaa = funcaa
         self.identityV = identityValue
         self.identityA = identityAction
-        self.lazy = [identityAction for _ in range(self.L * 2 - 1)]
-
-        while len(setList) != self.L:
-            setList.append(self.identityV)
-        self.binaryTree = [0] * (self.L - 1)
-        self.binaryTree.extend(setList)
+        self.lazy = [identityAction] * (self.L * 2 - 1)
+        self.binaryTree = [self.identityV] * (self.L * 2 - 1)
         self.se = [0] * (self.L - 1)
         self.se.extend([(i, i+1) for i in range(self.L)])
 
+        for i in range(len(setList)):
+            self.binaryTree[self.L - 1 + i] = setList[i]
+        
         for i in range(self.L - 2, -1, -1):
-            self.binaryTree[i] = self.func(self.binaryTree[2*i + 1], self.binaryTree[2*i + 2])
+            self.binaryTree[i] = self.funcvv(self.binaryTree[2*i + 1], self.binaryTree[2*i + 2])
             self.se[i] = (self.se[2*i + 1][0] , self.se[2*i+2][1])
         
     def show(self):
@@ -48,7 +47,7 @@ class lasySegTree():
         """
         index = self.L - 1 + index
         self.binaryTree[index] = value
-        while True:
+        while True: 
             index = (index - 1 ) // 2
             self.binaryTree[index] = self.func(self.binaryTree[2*index + 1], self.binaryTree[2*index + 2])
             if index == 0:
@@ -69,13 +68,39 @@ class lasySegTree():
             return
         #部分的に一致する場合
         elif start < e and end > s:
-            mid = self.se[index*2+1][1]
             self.rec_section_set(index*2+1, start, end, action)
             self.rec_section_set(index*2+2, start, end, action)
             self.binaryTree[index] = self.funcvv(self.binaryTree[index*2+1], self.binaryTree[index*2+2])
         #完全に一致しない場合
         else:
             return
+        
+    def stack_section_set(self, start, end, action):
+        stack = deque()
+        stack.append(0)
+        while len(stack) != 0:
+            index = stack.pop()
+            if index < 0:
+                index = - index - 1
+                self.binaryTree[index] = self.funcvv(self.binaryTree[index*2+1], self.binaryTree[index*2+2])
+                continue
+            self.prop(index)
+            if start >= end:
+                continue
+            s, e = self.se[index]
+            #完全に包含される場合
+            if s >= start and e <= end:
+                self.lazy[index] = action
+                self.prop(index)
+                continue
+            #部分的に一致する場合
+            elif start < e and end > s:
+                stack.append(-index-1)
+                stack.append(index*2 + 2)
+                stack.append(index*2 + 1)
+            #完全に一致しない場合
+            else:
+                continue
 
     def prop(self, index):
         if not self.lazy[index] == self.identityA:
@@ -94,8 +119,6 @@ class lasySegTree():
 
     def recquery(self, index, start, end):
         self.prop(index)
-        if start == end:
-            return self.identityV
         s, e = self.se[index]
         #完全に一致する場合
         if s >= start and e <= end:
@@ -106,3 +129,23 @@ class lasySegTree():
         #完全に一致しない場合
         else:
             return self.identityV
+        
+    
+    def stack_query(self, start, end):
+        stack = deque([0])
+        ans = self.identityV
+        while len(stack) != 0:
+            index = stack.pop()
+            self.prop(index)
+            s, e = self.se[index]
+            #完全に一致する場合
+            if s >= start and e <= end:
+                ans = self.funcvv(ans, self.binaryTree[index])
+            #部分的に一致する場合
+            elif start < e and end > s:
+                stack.append(index*2 + 2)
+                stack.append(index*2 + 1)
+            #完全に一致しない場合
+            else:
+                continue
+        return ans
