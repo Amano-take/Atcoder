@@ -1,18 +1,15 @@
-import math
+from collections import deque
 
 
 class segTree():
     def __init__(self, setList, func, identity=None):
-        self.L = 2 ** math.ceil(math.log2(len(setList)))
+        self.L = 1 << (len(setList) - 1).bit_length()
         self.func = func
         self.identity = identity
-
-        while len(setList) != self.L:
-            setList.append(identity)
-        self.binaryTree = [0] * (self.L - 1)
-        self.binaryTree.extend(setList)
-        self.se = [0] * (self.L - 1)
-        self.se.extend([(i, i+1) for i in range(self.L)])
+        self.binaryTree = [self.identity]*(self.L-1)
+        self.binaryTree[self.L-1::1] = setList
+        self.se = [(0, 0)] * (self.L - 1)
+        self.se = self.se.extend([(i, i+1) for i in range(self.L)])
 
         for i in range(self.L - 2, -1, -1):
             self.binaryTree[i] = self.func(self.binaryTree[2*i + 1], self.binaryTree[2*i + 2])
@@ -63,20 +60,24 @@ class segTree():
         elif start < e and end > s:
             return self.func(self.recquery(index*2+1, start, end), self.recquery(index*2+2, start, end))
         #完全に一致しない場合
-        else
+        else:
             return self.identity
         
+    def stack_query(self, start, end):
+        stack = deque([0])
+        ans = self.identity
+        while len(stack) != 0:
+            index = stack.pop()
+            s, e = self.se[index]
+            #完全に一致する場合
+            if s >= start and e <= end:
+                ans = self.func(ans, self.binaryTree[index])
+            #部分的に一致する場合
+            elif start < e and end > s:
+                stack.append(index*2 + 2)
+                stack.append(index*2 + 1)
+            #完全に一致しない場合
+            else:
+                continue
+        return ans
 
-def minNone(x, y):
-    if x is None and y is None:
-        return None
-    elif x is None:
-        return y
-    elif y is None:
-        return x
-    else:
-        if x <= y:
-            return x
-        else:
-            return y
-        
