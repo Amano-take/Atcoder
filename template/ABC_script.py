@@ -1,8 +1,8 @@
 import os
-num = 309
+num = 300
 for i in range(100):
     n = num + i
-    dir_path = './' + str(n)
+    dir_path = './' + str((num//100) * 100) + "/" + str(n)
     if not os.path.isdir(dir_path):
         path = dir_path
         break
