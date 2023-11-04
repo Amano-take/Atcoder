@@ -8,8 +8,8 @@ for i in range(100):
         break
 
 abc = ["A", "B", "C", "D", "E", "F", "G"]
-line = ["import sys\n", "import io\n", "import math\n", "sys.setrecursionlimit(10**8)\n",
-         "_INPUT = \"\"\"\\\n", "\n", "\"\"\"\n","sys.stdin = io.StringIO(_INPUT)\n", "readline=sys.stdin.readline"]
+line = ["import sys\n", "import io\n", "import math\n", "inf = float(\"inf\")\n", "sys.setrecursionlimit(10**8)\n",
+         "_INPUT = \"\"\"\\\n", "\n", "\"\"\"\n","sys.stdin = io.StringIO(_INPUT)\n", "readline=lambda: sys.stdin.readline().strip()"]
 
 os.makedirs(path)
 for alphabet in abc:
