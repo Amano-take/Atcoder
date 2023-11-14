@@ -1,10 +1,14 @@
+import sys
+import io
+import math
+inf = float("inf")
+sys.setrecursionlimit(10**8)
 from collections import defaultdict
 
 class UnionFind():
     def __init__(self, n, weight=False):
         self.n = n
         self.parents = [-1] * n
-        self.is_weight = weight
         if weight:
             #親との差
             self.diff_parent = [0] * n
@@ -100,9 +104,44 @@ class UnionFind():
     def __str__(self):
         return '\n'.join(f'{r}: {m}' for r, m in self.all_group_members().items())
     
-    def copy(self):
-        newuf = UnionFind(self.n, self.is_weight)
-        newuf.parents = self.parents.copy()
-        if self.is_weight:
-            newuf.diff_parent = self.diff_parent.copy()
-        return newuf
+
+_INPUT = """\
+5 20
+4 2 125421359
+2 5 -191096267
+3 4 -42422908
+3 5 -180492387
+3 3 174861038
+2 3 -82998451
+3 4 -134761089
+3 1 -57159320
+5 2 191096267
+2 4 -120557647
+4 2 125421359
+2 3 142216401
+4 5 -96172984
+3 5 -108097816
+1 5 -50938496
+1 2 140157771
+5 4 65674908
+4 3 35196193
+4 4 0
+3 4 188711840
+"""
+sys.stdin = io.StringIO(_INPUT)
+readline=lambda: sys.stdin.readline().strip()
+
+N, Q = map(int, readline().split())
+uf = UnionFind(N, True)
+ans = []
+for i in range(Q):
+    a, b, d = map(int, readline().split())
+    a -= 1
+    b -= 1
+    try:
+
+        uf.union_with_weight(b, a, d)
+        ans.append(i+1)
+    except:
+        continue
+print(" ".join(map(str, ans)))
