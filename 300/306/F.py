@@ -15,7 +15,8 @@ readline=sys.stdin.readline
 N, M = map(int, readline().split())
 
 
-#slじゃなくてBITでもいけるな
+#slじゃなくてBITでもいけるらしい
+#がんばる
 As = [sorted(map(int, readline().split())) for _ in range(N)]
 sl = SortedList(As[-1])
 rank = []
