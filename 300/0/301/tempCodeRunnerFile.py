@@ -62,10 +62,4 @@ else:
                     ans.append(S[i])
             print(int("".join(ans), 2))
     else:
-        ans = []
-        for i in range(len(S)):
-            if S[i] == "?":
-                    ans.append(SN[i])
-            else:
-                ans.append(S[i])
-        print(int("".join(ans), 2))
+        print(int("".join(S), 2))
