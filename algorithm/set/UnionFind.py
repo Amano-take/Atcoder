@@ -3,22 +3,10 @@ from collections import defaultdict as ddict
 
 #TODO
 class UnionFind:
-    def __init__(self, n, weight=False):
+    class UnionFind():
+    def __init__(self, n):
         self.n = n
         self.parents = [-1] * n
-        self.is_weight = weight
-        if weight:
-            # 親との差
-            self.diff_parent = [0] * n
-
-    def find_with_weight(self, x):
-        if self.parents[x] < 0:
-            return x, 0
-        else:
-            parent, diff = self.find_with_weight(self.parents[x])
-            self.parents[x] = parent
-            self.diff_parent[x] += diff
-            return self.parents[x], self.diff_parent[x]
 
     def find(self, x):
         if self.parents[x] < 0:
@@ -26,42 +14,6 @@ class UnionFind:
         else:
             self.parents[x] = self.find(self.parents[x])
             return self.parents[x]
-
-    def diff(self, x, y):
-        """
-        return w_y - w_x
-        """
-        px, wx = self.find_with_weight(x)
-        py, wy = self.find_with_weight(y)
-        if px != py:
-            raise ValueError("They belong to different groups.")
-        else:
-            return wy - wx
-
-    def union_with_weight(self, x, y, w):
-        """
-        weight(y) = weight(x) + w
-        """
-        px, wx = self.find_with_weight(x)
-        py, wy = self.find_with_weight(y)
-        if px == py:
-            # vx = w_px + wx, vy = w_px + wy, vy = vx + w
-            # w_px = vx - wx -> vy = vx + wy - wx
-            if wy - wx != w:
-                raise ValueError("Weight mismatch!")
-            else:
-                return
-
-        # pxのほうが常に大きいチームに変更->pxが融合後のチームリーダー（この方が高さが小さい）
-        if self.parents[px] > self.parents[py]:
-            px, py = py, px
-            wx, wy = wy, wx
-            w = -w
-
-        self.parents[px] += self.parents[py]
-        self.parents[py] = px
-        # v_py = v_px + ???, w_y = w_x + w -> v_py + wy = v_px + wx + w
-        self.diff_parent[py] = wx + w - wy
 
     def union(self, x, y):
         x = self.find(x)
@@ -99,11 +51,50 @@ class UnionFind:
         return group_members
 
     def __str__(self):
-        return "\n".join(f"{r}: {m}" for r, m in self.all_group_members().items())
+        return '\n'.join(f'{r}: {m}' for r, m in self.all_group_members().items())
+    
+class WeightedUnionFind:
+    def __init__(self, n):
+        self.par = [i for i in range(n+1)]
+        self.rank = [0] * (n+1)
+        # 根への距離を管理
+        self.weight = [0] * (n+1)
 
-    def copy(self):
-        newuf = UnionFind(self.n, self.is_weight)
-        newuf.parents = self.parents.copy()
-        if self.is_weight:
-            newuf.diff_parent = self.diff_parent.copy()
-        return newuf
+    # 検索
+    def find(self, x):
+        if self.par[x] == x:
+            return x
+        else:
+            y = self.find(self.par[x])
+            # 親への重みを追加しながら根まで走査
+            self.weight[x] += self.weight[self.par[x]]
+            self.par[x] = y
+            return y
+
+    # 併合
+    def union(self, x, y, w):
+        rx = self.find(x)
+        ry = self.find(y)
+        # xの木の高さ < yの木の高さ
+        if self.rank[rx] < self.rank[ry]:
+            self.par[rx] = ry
+            self.weight[rx] = w - self.weight[x] + self.weight[y]
+        # xの木の高さ ≧ yの木の高さ
+        else:
+            self.par[ry] = rx
+            self.weight[ry] = -w - self.weight[y] + self.weight[x]
+            # 木の高さが同じだった場合の処理
+            if self.rank[rx] == self.rank[ry]:
+                self.rank[rx] += 1
+
+    # 同じ集合に属するか
+    def same(self, x, y):
+        return self.find(x) == self.find(y)
+
+    # xからyへのコスト
+    def diff(self, x, y):
+        return self.weight[x] - self.weight[y]
+
+
+   
+    
