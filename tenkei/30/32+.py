@@ -23,20 +23,13 @@ for _ in range(M):
     ng[a].add(b)
     ng[b].add(a)
 
-def permutation_rec(perm, rest):
-
-    if len(rest) == 0:
-        return [perm]
-    result = []
-    for i in range(len(rest)):
-        if len(perm) == 0 or rest[i] not in ng[perm[-1]]:
-            result.extend(permutation_rec(perm + [rest[i]], rest[:i] + rest[i+1:]))
-    return result
-
 ans = inf
-for perm in permutation_rec([], list(range(1, N+1))):
+for perm in permutations(list(range(1, N+1))):
     time = 0
     for i in range(N):
+        if i > 0 and perm[i] in ng[perm[i-1]]:
+            break
         time += Times[perm[i]-1][i]
-    ans = min(ans, time)
+    else:
+        ans = min(ans, time)
 print(ans if ans != inf else -1)
