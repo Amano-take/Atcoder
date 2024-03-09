@@ -7,7 +7,7 @@ sys.setrecursionlimit(10**8)
 
 input=lambda: sys.stdin.readline().strip()
 N = int(input())
-M = (N-1).bit_length()
+M = N.bit_length()
 drink = [[] for _ in range(M)]
 for i in range(N):
     t = i
@@ -28,5 +28,4 @@ for i in range(len(s)):
         ans += 2 ** i
 
 print(ans)
-sys.stdout.flush()
     
