@@ -1,3 +1,5 @@
 import datetime
+import pyperclip
 
-print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+pyperclip.copy(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+print(pyperclip.paste())
